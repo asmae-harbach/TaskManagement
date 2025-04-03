@@ -1,0 +1,65 @@
+import axios from "axios"
+import { useState } from "react"
+import { FaUser, FaUserCircle } from "react-icons/fa"
+import { GiPadlock } from "react-icons/gi"
+import { useDispatch } from "react-redux"
+import { Link, useNavigate } from "react-router-dom"
+import {authActions} from '../store/auth'
+
+const Login = ()=>{
+    const [loginData, setLoginData] = useState({username : "", password : ""})
+    const dispatch = useDispatch()
+    const navigate = useNavigate()
+    if(localStorage.getItem("id") && localStorage.getItem("token")){
+        navigate('/')
+    }
+    const change = (e) =>{
+        const {name, value} = e.target
+        setLoginData({...loginData, [name] : value})
+    }
+
+    const loginUser = async() =>{
+        try {
+            if(loginData.username === "" || loginData.password === ""){
+                alert("Tous les cases sont requis")
+            }else{
+                const response = await axios.post('http://localhost:2000/api/v1/login', loginData)
+                localStorage.setItem("id",response.data.id)
+                localStorage.setItem("token",response.data.token)
+                setLoginData({username : "", password : ""})
+                dispatch(authActions.login())
+                navigate('/')
+            }
+        } catch (error) {
+            if(error.response){
+                alert(error.response.data.message)
+            }else{
+                alert("Une erreur est servenue.")
+            }
+        }
+    }
+
+    return(
+        <div className={` w-full h-screen flex flex-col items-center justify-around bg-gradient-to-r from-blue-200 via-blue-300 to-blue-600`}>
+            <h2 className="text-5xl font-semibold text-blue-900 mb-2">Login</h2>
+            <div className="relative w-4/6 md:w-2/6 bg-blue-100 p-6 rounded-2xl h-1/2 flex flex-col items-center justify-end shadow-2xl">
+            <div className="flex w-full bg-white items-center p-2 gap-3 rounded-lg my-2 ">
+                <FaUser className="text-xl text-blue-400" />
+                <input onChange={change} value={loginData.username}  type="text" name="username" placeholder="username" className="w-full focus:outline-none"/>
+            </div>
+            <div className="flex w-full bg-white items-center p-2 gap-3 rounded-lg my-2">
+                <GiPadlock className="text-xl text-blue-400" />
+                <input  onChange={change} value={loginData.password}  type="password" name="password" placeholder="password" className="w-full focus:outline-none"/>
+            </div>
+            <FaUserCircle className="absolute top-[-50px] left-[1/6] text-8xl text-blue-400 bg-white border-2 border-white rounded-[50%]" />
+            <div className="self-end text-white font-semibold my-7">
+                <button className="p-2 h-12 bg-blue-400 border-2 border-white rounded-xl w-20 mr-3">
+                    <Link to={"/signup"}>Signup</Link>
+                </button>
+                <button onClick={loginUser} className="p-2 h-12 bg-blue-400 border-2 border-white rounded-xl w-20">Login</button>
+            </div>
+            </div>
+        </div>
+    )
+}
+export default Login
